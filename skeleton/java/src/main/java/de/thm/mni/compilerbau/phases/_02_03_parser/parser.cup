@@ -1,0 +1,99 @@
+package de.thm.mni.compilerbau.phases._02_03_parser;
+
+import java.util.List;
+import java.util.LinkedList;
+import java_cup.runtime.*;
+import de.thm.mni.compilerbau.phases._01_scanner.Scanner;
+import de.thm.mni.compilerbau.absyn.*;
+import de.thm.mni.compilerbau.table.Identifier;
+import de.thm.mni.compilerbau.utils.SplError;
+import de.thm.mni.compilerbau.CommandLineOptions;
+
+parser code {:
+  public CommandLineOptions options = null;
+
+  public void syntax_error(Symbol currentToken) {
+    throw SplError.SyntaxError(new Position(currentToken.left, currentToken.right), ((Scanner)getScanner()).yytext());
+  }
+  
+  /**
+   * @return An empty list. (Uses LinkedList)
+   */
+  public static <E> List<E> nil() {
+      return new LinkedList<E>();
+  }
+  
+  /**
+   * Constructs a list from a head and a tail without modifying the tail (Uses LinkedList).
+   * Use this as a helper if you don't want to deal with constructing lists manually.
+   *
+   * @param head The head of the list
+   * @param tail The tail of the list
+   * @return A list containing the head element and all elements of tail
+   */
+  public static <E> List<E> cons(E head, List<E> tail) {
+    List<E> copy = new LinkedList(tail);
+    copy.add(0, head);
+    return copy;
+  }
+:}
+
+/* Terminals/Tokens */
+terminal LBRACK, RBRACK, LPAREN, RPAREN, LCURL, RCURL;         //Braces, parenthesis, brackets
+terminal LT, LE, GT, GE, NE, EQ;                               //Comparison operators
+terminal PLUS, MINUS, STAR, SLASH;                             //Arithmetic operators
+terminal ASGN, COMMA, COLON, SEMIC;                            //Other delimiters
+terminal TYPE, PROC, ARRAY, OF, REF, VAR, IF, ELSE, WHILE;     //Keywords
+
+terminal Identifier IDENT;    //Identifiers
+terminal Integer INTLIT;      //Integer literals
+
+/* Definition der Nonterminalsymbole */
+non terminal Program program;
+non terminal GlobalDeclaration GloDecl;
+non terminal TypeDeclaration TypeDecl;
+non terminal ProcedureDeclaration ProcDecl;
+non terminal ParameterDeclaration ParamDecl;
+non terminal VariableDeclaration VarDecl;
+non terminal TypeExpression TypeExpr;
+non terminal ArrayTypeExpression ArrTypeExpr;
+non terminal NamedTypeExpression NamedTypeExpr;
+non terminal BinaryExpression BinExpr;
+non terminal VariableExpression VarExpr;
+non terminal Variable Variable;
+non terminal ArrayAccess ArrAcc;
+non terminal NamedVariable NamedVar;
+non terminal Statement Statement;
+non terminal AssignStatement AssignStmt;
+non terminal CAllStatement CallStmt;
+non terminal CompoundStatement CmpdStmt;
+non terminal EmptyStatement EmptStmt;
+non terminal IfStatement IfStmt;
+non terminal WhileStatement WhileStmt;
+non terminal Expression Expression1;
+non terminal Expression Expression2;
+non terminal Expression Expression3;
+
+
+
+
+start with program;
+
+program ::= Expression1 SEMIC;
+
+TypeDecl ::= TYPE IDENT EQ IDENT SEMIC;
+WhileStmt ::= WHILE LPAREN Expression1 RPAREN Statement ;
+IfStmt ::= IF LPAREN Expression1 RPAREN Statement | IF LPAREN Expression1 RPAREN Statement ELSE Statement ;
+Expression1 ::= Expression1 PLUS Expression2
+                      | Expression1 MINUS Expression2
+                      | Expression2;
+
+                  Expression2 ::= Expression2 STAR Expression3
+                      | Expression2 SLASH Expression3
+                      | Expression3;
+
+                  Expression3 ::=  LPAREN Expression1 RPAREN
+                      | Variable
+                      | INTLIT
+                      | MINUS Expression3;
+

@@ -1,0 +1,1 @@
+proc copy(i: int, ref j: int) { j := i; }
